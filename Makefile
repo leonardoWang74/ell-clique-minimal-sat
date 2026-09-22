@@ -35,7 +35,8 @@ cadical:  # download & compile the cadical binary
 cake_lpr:  # download & compile the cake_lpr binary
 	# download the proof checker cake_lpr
 	git clone --depth 1 https://github.com/tanyongkiam/cake_lpr.git
-	cd cake_lpr && make cake_lpr && sha256sum -c cake_lpr.sha256
+	cd cake_lpr && make cake_lpr
+	-sha256sum -c cake_lpr.sha256
 	cd cake_lpr && git rev-parse HEAD  # was a36874a8b750b43fe4b385b8ddbf5b033e46a3fa
 	cd cake_lpr && ./cake_lpr example.cnf example.lpr
 

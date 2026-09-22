@@ -1,4 +1,4 @@
-Requirements: `python3.10` command.
+Requirements: installed `python3` command.
 
 Run `make sat-vs-nauty-verification` to run the SAT enumeration and nauty-plugin enumeration to verify the SAT formulation against the nauty-geng plugin. The graph6 list of found graphs will be in the folder `./sat-enumerate`.
 
