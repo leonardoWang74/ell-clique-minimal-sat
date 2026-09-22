@@ -1,0 +1,6 @@
+cadical
+cake_lpr
+out
+sat-enumerate
+sat-proofs
+*.o
