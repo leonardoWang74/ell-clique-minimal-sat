@@ -340,12 +340,12 @@ def solve_instance(ell, kappa, n=0, enc=EncType.seqcounter,
 
     t0 = time.perf_counter()
     CURRENT_PROCESS = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, text=True)
-    out, _ = CURRENT_PROCESS.communicate()
+                                       stderr=subprocess.PIPE, universal_newlines=True)
+    stdout, _ = CURRENT_PROCESS.communicate()
     CURRENT_PROCESS = None
     t_sat = time.perf_counter() - t0
     TIME_SAT += t_sat
-    verdict = next((l for l in out.splitlines() if l.startswith("s ")), "s UNKNOWN")
+    verdict = next((l for l in stdout.splitlines() if l.startswith("s ")), "s UNKNOWN")
 
     # UNSAT: verify the LRAT proof
     if verdict.startswith("s UNSATISFIABLE"):
@@ -354,17 +354,18 @@ def solve_instance(ell, kappa, n=0, enc=EncType.seqcounter,
             print(f"  UNSAT (proven) in {t_sat:.3f}s, LRAT proof {human_readable_bytes(size)}")
             t0 = time.perf_counter()
             c = subprocess.run([checker] + list(checker_args) + [tag + ".cnf", tag + ".lrat"],
-                            capture_output=True, text=True)
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             t_ver = time.perf_counter() - t0
             TIME_VERIFY += t_ver
+            stdout, stderr = c.stdout, c.stderr
 
             # absence of VERIFIED counts as failure: a checker that parsed nothing
             # still prints plausible-looking statistics
-            ok = "VERIFIED" in c.stdout
+            ok = "s VERIFIED" in c.stdout
             print(f"  LRAT check ({os.path.basename(checker)}): "
                 f"{'VERIFIED' if ok else 'FAILED'} in {t_ver:.3f}s")
-            if len(c.stderr)>0:
-                print(f"Checker {checker} stderr: {c.stderr}")
+            if len(stderr)>0:
+                print(f"Checker {checker} stderr: {stderr}")
             if ok and delete_proof:
                 os.remove(tag + ".lrat")
                 print(f"  deleted {tag}.lrat and freed {human_readable_bytes(size)} "
@@ -377,7 +378,7 @@ def solve_instance(ell, kappa, n=0, enc=EncType.seqcounter,
 
     # SAT
     if verdict.startswith("s SATISFIABLE"):
-        pos = {int(x) for line in out.splitlines() if line.startswith("v ")
+        pos = {int(x) for line in stdout.splitlines() if line.startswith("v ")
                for x in line[2:].split() if int(x) > 0}
         rows = [sorted(v for v in range(n) if cmap[(v, i)] in pos) for i in range(kappa)]
         print(f"  SAT in {t_sat:.3f}s")

@@ -1,0 +1,13 @@
+attrs==19.3.0
+bidict==0.18.4
+decorator==4.4.2
+funcy==1.18
+networkx==2.5.1
+parsimonious==0.8.1
+py-aiger==4.3.0
+py-aiger-cnf==3.0.0
+pypblib==0.0.4
+pyrsistent==0.15.7
+python-sat==1.9.dev15
+six==1.17.0
+toposort==1.10
