@@ -9,7 +9,7 @@ all: sat-vs-nauty-verification sat
 
 clean:
 	rm -rf ./cadical ./cake_lpr ./sat-proofs ./sat-enumerate ./nauty-plugin/$(NAUTY_VERSION) \
-		./nauty-plugin/$(NAUTY_VERSION).tar.gz ./nauty-plugin/*.o ./*.o plugin_to_graph6
+		./nauty-plugin/$(NAUTY_VERSION).tar.gz ./nauty-plugin/*.o ./*.o plugin_to_graph6 testWithNauty
 
 readme:
 help:
@@ -135,48 +135,49 @@ sat: cadical cake_lpr
 testWithNauty.o: testWithNauty.cpp Graph.h
 	$(CXX) $(CXXFLAGS) -c testWithNauty.cpp
 
-testWithNauty-compile: testWithNauty.o Graph.o out-directory
-	$(CXX) $(CXXFLAGS) testWithNauty.o Graph.o -o out/testWithNauty
+testWithNauty-compile: testWithNauty.o Graph.o
+	$(CXX) $(CXXFLAGS) testWithNauty.o Graph.o -o testWithNauty
 
 testWithNauty: testWithNauty-compile nauty-plugin/result
-	nauty-geng -q 2 | ./out/testWithNauty -l 2 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell2.txt
+	nauty-geng -q 2 | ./testWithNauty -l 2 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell2.txt
 	cat ./sat-enumerate/nauty-basic-enumerate-ell2.txt | nauty-labelg -q | sort -u > ./sat-enumerate/nauty-basic-enumerate-ell2.g6
-	diff ./sat-enumerate/nauty-basic-enumerate-ell2.g6 ./nauty-plugin/result/nauty-ell-2.g6 && echo "Verified nauty-geng plugin for ell=2"
 
-	nauty-geng -q 4 | ./out/testWithNauty -l 3 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell3.txt
-	nauty-geng -q 3 | ./out/testWithNauty -l 3 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell3.txt
-	nauty-geng -q 2 | ./out/testWithNauty -l 3 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell3.txt
+	nauty-geng -q 4 | ./testWithNauty -l 3 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell3.txt
+	nauty-geng -q 3 | ./testWithNauty -l 3 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell3.txt
+	nauty-geng -q 2 | ./testWithNauty -l 3 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell3.txt
 	cat ./sat-enumerate/nauty-basic-enumerate-ell3.txt | nauty-labelg -q | sort -u > ./sat-enumerate/nauty-basic-enumerate-ell3.g6
-	diff ./sat-enumerate/nauty-basic-enumerate-ell3.g6 ./nauty-plugin/result/nauty-ell-3.g6 && echo "Verified nauty-geng plugin for ell=3"
 
-	nauty-geng -q 6 | ./out/testWithNauty -l 4 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell4.txt
-	nauty-geng -q 5 | ./out/testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
-	nauty-geng -q 4 | ./out/testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
-	nauty-geng -q 3 | ./out/testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
-	nauty-geng -q 2 | ./out/testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
+	nauty-geng -q 6 | ./testWithNauty -l 4 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell4.txt
+	nauty-geng -q 5 | ./testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
+	nauty-geng -q 4 | ./testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
+	nauty-geng -q 3 | ./testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
+	nauty-geng -q 2 | ./testWithNauty -l 4 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell4.txt
 	cat ./sat-enumerate/nauty-basic-enumerate-ell4.txt | nauty-labelg -q | sort -u > ./sat-enumerate/nauty-basic-enumerate-ell4.g6
-	diff ./sat-enumerate/nauty-basic-enumerate-ell4.g6 ./nauty-plugin/result/nauty-ell-4.g6 && echo "Verified nauty-geng plugin for ell=4"
 
-	nauty-geng -q 8 | ./out/testWithNauty -l 5 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell5.txt
-	nauty-geng -q 7 | ./out/testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
-	nauty-geng -q 6 | ./out/testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
-	nauty-geng -q 5 | ./out/testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
-	nauty-geng -q 4 | ./out/testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
-	nauty-geng -q 3 | ./out/testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
-	nauty-geng -q 2 | ./out/testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 8 | ./testWithNauty -l 5 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 7 | ./testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 6 | ./testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 5 | ./testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 4 | ./testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 3 | ./testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
+	nauty-geng -q 2 | ./testWithNauty -l 5 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell5.txt
 	cat ./sat-enumerate/nauty-basic-enumerate-ell5.txt | nauty-labelg -q | sort -u > ./sat-enumerate/nauty-basic-enumerate-ell5.g6
-	diff ./sat-enumerate/nauty-basic-enumerate-ell5.g6 ./nauty-plugin/result/nauty-ell-5.g6 && echo "Verified nauty-geng plugin for ell=5"
 
-	nauty-geng -q 10 | ./out/testWithNauty -l 6 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 9 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 8 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 7 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 6 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 5 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 4 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 3 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
-	nauty-geng -q 2 | ./out/testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 10 | ./testWithNauty -l 6 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 9 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 8 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 7 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 6 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 5 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 4 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 3 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
+	nauty-geng -q 2 | ./testWithNauty -l 6 -p 1 >> ./sat-enumerate/nauty-basic-enumerate-ell6.txt
 	cat ./sat-enumerate/nauty-basic-enumerate-ell6.txt | nauty-labelg -q | sort -u > ./sat-enumerate/nauty-basic-enumerate-ell6.g6
+	
+	diff ./sat-enumerate/nauty-basic-enumerate-ell2.g6 ./nauty-plugin/result/nauty-ell-2.g6 && echo "Verified nauty-geng plugin for ell=2"
+	diff ./sat-enumerate/nauty-basic-enumerate-ell3.g6 ./nauty-plugin/result/nauty-ell-3.g6 && echo "Verified nauty-geng plugin for ell=3"
+	diff ./sat-enumerate/nauty-basic-enumerate-ell4.g6 ./nauty-plugin/result/nauty-ell-4.g6 && echo "Verified nauty-geng plugin for ell=4"
+	diff ./sat-enumerate/nauty-basic-enumerate-ell5.g6 ./nauty-plugin/result/nauty-ell-5.g6 && echo "Verified nauty-geng plugin for ell=5"
 	diff ./sat-enumerate/nauty-basic-enumerate-ell6.g6 ./nauty-plugin/result/nauty-ell-6.g6 && echo "Verified nauty-geng plugin for ell=6"
 
 	echo "Verified nauty-geng plugin for ell=2,3,4,5,6"
