@@ -1,5 +1,5 @@
 # read the README.md for instructions on how to run
-.PHONY: clean, satenumerate, sat, sms, nauty-plugin
+.PHONY: clean, satenumerate, sat, sat9, sms, nauty-plugin, nauty-plugin8
 
 CXX = g++
 CXXFLAGS = -O3 -std=c++17 -Wall -Wextra
@@ -114,6 +114,11 @@ nauty-plugin: nauty-plugin/$(NAUTY_VERSION) nauty-plugin/plugin_to_graph6
 	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 12 -u > ./result/nauty-ell-7.txt
 	cd nauty-plugin; cat ./result/nauty-ell-7.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-7.g6
 
+nauty-plugin8:
+	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=8 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 14 -u > ./result/nauty-ell-8.txt
+	cd nauty-plugin; cat ./result/nauty-ell-8.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-8.g6
+
 # target verifying that nauty-plugin was run
 nauty-plugin/result:
 	make nauty-plugin
@@ -132,8 +137,10 @@ sat: cadical cake_lpr
 	$(PY) sat.py -l 6
 	$(PY) sat.py -l 7
 	$(PY) sat.py -l 8
+
+sat9: cadical cake_lpr
 	# for ell=9 LRAT proofs are >50GB, so we delete LRAT files after verification
-	# $(PY) sat.py -l 9 --delete-proof --checker-arg=--CML_HEAP_SIZE=16384
+	$(PY) sat.py -l 9 --delete-proof --checker-arg=--CML_HEAP_SIZE=16384
 
 # verify the nauty-geng plugin with a basic enumeration
 testWithNauty.o: testWithNauty.cpp Graph.h
