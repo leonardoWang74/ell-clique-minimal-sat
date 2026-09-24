@@ -560,7 +560,7 @@ if __name__ == "__main__":
         solve_instance(ell, args.k, **common)
         exit()
 
-    kappa_upper_bound = min(2 * (ell - 1), math.ceil(ell + 2 * math.sqrt(ell - 1)))
+    kappa_upper_bound = min(2 * (ell - 1), math.ceil(ell + 2 * math.sqrt(ell - 1))-1)
 
     # n given, kappa not given: run for possible kappa values
     if args.n is not None:
@@ -580,7 +580,7 @@ if __name__ == "__main__":
             break
 
         n_bound_k_three_halves = math.floor((kappa + math.sqrt(2) * math.pow(kappa, 1.5)) / (1 + kappa - ell))
-        n_bound_balogh_bollobas = (math.ceil(kappa / 2) * math.floor(kappa / 2) - 1) if kappa >= 8 else 2 * (kappa - 1)
+        n_bound_balogh_bollobas = math.ceil(kappa / 2) * math.floor(kappa / 2) - 1 if kappa >= 8 else 2 * (kappa - 1)
         n_bound_recurrence = 3 * ell - 6  # assuming linear proofs for ell' < ell
 
         n_upper_bound = min(n_bound_k_three_halves, n_bound_balogh_bollobas, n_bound_recurrence)
@@ -599,6 +599,7 @@ if __name__ == "__main__":
 
             if args.count_runs_only:
                 if n > n_lower_bound:
+                    print(f"Counting instance: kappa={kappa} n={n}.")
                     instances_count += 1
                 continue
 
