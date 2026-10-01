@@ -1,5 +1,5 @@
 # read the README.md for instructions on how to run
-.PHONY: clean, satenumerate, sat, sat9, sms, nauty-plugin, nauty-plugin8
+.PHONY: clean, satenumerate, sat, sat9, sat10, sms, nauty-plugin, nauty-plugin8
 
 CXX = g++
 CXXFLAGS = -O3 -std=c++17 -Wall -Wextra
@@ -142,6 +142,10 @@ sat9: cadical cake_lpr
 	# for ell=9 LRAT proofs are >50GB, so we delete LRAT files after verification
 	$(PY) sat.py -l 9 --delete-proof --checker-arg=--CML_HEAP_SIZE=16384
 
+sat10: cadical cake_lpr
+	# for ell=10 we estimate LRAT proofs to be too large for our disk space
+	$(PY) sat.py -l 10 --disable-proof
+
 # verify the nauty-geng plugin with a basic enumeration
 testWithNauty.o: testWithNauty.cpp Graph.h
 	$(CXX) $(CXXFLAGS) -c testWithNauty.cpp
@@ -192,3 +196,33 @@ testWithNauty: testWithNauty-compile nauty-plugin/result
 	diff ./sat-enumerate/nauty-basic-enumerate-ell6.g6 ./nauty-plugin/result/nauty-ell-6.g6 && echo "Verified nauty-geng plugin for ell=6"
 
 	echo "Verified nauty-geng plugin for ell=2,3,4,5,6"
+
+# verify the number of maximal cliques of the enumerated graphs
+testMaximalCliques.o: testMaximalCliques.cpp Graph.h
+	$(CXX) $(CXXFLAGS) -c testMaximalCliques.cpp
+
+testMaximalCliques-compile: testMaximalCliques.o Graph.o
+	$(CXX) $(CXXFLAGS) testMaximalCliques.o Graph.o -o testMaximalCliques
+
+testMaximalCliques: testMaximalCliques-compile # verify for ell=4,6,7 that kappa=2(ell-1) cannot be reached by using the enumerated graphs
+	cat sat-enumerate/enumerate-ell-3.g6 | ./testMaximalCliques -l 3
+	cat sat-enumerate/enumerate-ell-4.g6 | ./testMaximalCliques -l 4
+	cat sat-enumerate/enumerate-ell-5.g6 | ./testMaximalCliques -l 5
+	cat sat-enumerate/enumerate-ell-6.g6 | ./testMaximalCliques -l 6
+	cat sat-enumerate/enumerate-ell-7.g6 | ./testMaximalCliques -l 7
+
+satMaximalCliques:  # verify for ell=8 that kappa=2(ell-1) cannot be reached using SAT directly
+	$(PY) sat.py -l 8 -k 14 -n 2
+	$(PY) sat.py -l 8 -k 14 -n 3
+	$(PY) sat.py -l 8 -k 14 -n 4
+	$(PY) sat.py -l 8 -k 14 -n 5
+	$(PY) sat.py -l 8 -k 14 -n 6
+	$(PY) sat.py -l 8 -k 14 -n 7
+	$(PY) sat.py -l 8 -k 14 -n 8
+	$(PY) sat.py -l 8 -k 14 -n 9
+	$(PY) sat.py -l 8 -k 14 -n 10
+	$(PY) sat.py -l 8 -k 14 -n 11
+	$(PY) sat.py -l 8 -k 14 -n 12
+	$(PY) sat.py -l 8 -k 14 -n 13
+	$(PY) sat.py -l 8 -k 14 -n 14
+	# do not have to run for n > 14 since these instances have been run to show the linear bound

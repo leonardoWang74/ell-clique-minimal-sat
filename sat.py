@@ -99,7 +99,7 @@ def lexicographic_ordering_less_or_equal(pool, clauses, a, b, tag):
 
 
 # the model
-def encode_model(ell, kappa, n, enc=EncType.seqcounter, symmetry=True):
+def encode_model(ell, kappa, n, enc=EncType.seqcounter, symmetry=True, conformality=True):
     assert kappa >= ell, "kappa must be >= ell"
     V, CG = range(n), range(kappa)
 
@@ -126,19 +126,22 @@ def encode_model(ell, kappa, n, enc=EncType.seqcounter, symmetry=True):
     # D[v][i] = there exists j != i such that C_i \ C_j = {v}
     D = {(v, i): pool.id(("D", v, i)) for v in V for i in CG}
 
-    # vInside[i,j,k, v] <=> v \in (C_i \cap C_j) \cup (C_i \cap C_k) \cup (C_j \cap C_k)
-    vInside = {
-        (i,j,k,v): pool.id(("vInside", i, j, k, v))
-        for i in CG for j in CG for k in CG for v in V
-        if i < j and j < k
-    }
+    if conformality:
+        # vInside[i,j,k, v] <=> v \in (C_i \cap C_j) \cup (C_i \cap C_k) \cup (C_j \cap C_k)
+        vInside = {
+            (i,j,k,v): pool.id(("vInside", i, j, k, v))
+            for i in CG for j in CG for k in CG for v in V
+            if i < j and j < k
+        }
 
-    # isSuperset[i,j,k, d] <=> C_d \supseteq (C_i \cap C_j) \cup (C_i \cap C_k) \cup (C_j \cap C_k)
-    isSuperset = {
-        (i,j,k,d): pool.id(("isSuperset", i, j, k, d))
-        for i in CG for j in CG for k in CG for d in CG
-        if i < j and j < k
-    }
+        # isSuperset[i,j,k, d] <=> C_d \supseteq (C_i \cap C_j) \cup (C_i \cap C_k) \cup (C_j \cap C_k)
+        isSuperset = {
+            (i,j,k,d): pool.id(("isSuperset", i, j, k, d))
+            for i in CG for j in CG for k in CG for d in CG
+            if i < j and j < k
+        }
+    else:
+        print(f"Skipping conformality variables and clauses.")
 
     # list of clauses following the DIMACS format
     # (list of list of variable IDs, negative if negated)
@@ -193,33 +196,34 @@ def encode_model(ell, kappa, n, enc=EncType.seqcounter, symmetry=True):
                 clauses.append([S[v, i,j] for v in V])
 
     # conformality: vInside, isSuperset, conformality condition
-    for i in CG:
-        for j in CG:
-            if j <= i:
-                continue
-            for k in CG:
-                if k <= j:
+    if conformality:
+        for i in CG:
+            for j in CG:
+                if j <= i:
                     continue
-                # i < j < k
+                for k in CG:
+                    if k <= j:
+                        continue
+                    # i < j < k
 
-                # vInside
-                for v in V:
-                    vIn = vInside[i,j,k, v]
-                    Ci, Cj, Ck = C[v,i], C[v,j], C[v, k]
-                    clauses += [
-                        # =>
-                        [-vIn, Ci, Cj], [-vIn, Ci, Ck], [-vIn, Cj, Ck],
-                        # <=
-                        [vIn, -Ci, -Cj], [vIn, -Ci, -Ck], [vIn, -Cj, -Ck],
-                    ]
-
-                # isSuperset
-                for d in CG:
+                    # vInside
                     for v in V:
-                        clauses.append([-isSuperset[i,j,k, d], -vInside[i,j,k, v], C[v, d]])
+                        vIn = vInside[i,j,k, v]
+                        Ci, Cj, Ck = C[v,i], C[v,j], C[v, k]
+                        clauses += [
+                            # =>
+                            [-vIn, Ci, Cj], [-vIn, Ci, Ck], [-vIn, Cj, Ck],
+                            # <=
+                            [vIn, -Ci, -Cj], [vIn, -Ci, -Ck], [vIn, -Cj, -Ck],
+                        ]
 
-                # conformality
-                clauses.append([isSuperset[i,j,k, d] for d in CG])
+                    # isSuperset
+                    for d in CG:
+                        for v in V:
+                            clauses.append([-isSuperset[i,j,k, d], -vInside[i,j,k, v], C[v, d]])
+
+                    # conformality
+                    clauses.append([isSuperset[i,j,k, d] for d in CG])
 
     # condition for ell-clique-minimality
     cardinality_clauses = 0
@@ -334,9 +338,13 @@ def solve_instance(ell, kappa, n=0, enc=EncType.seqcounter,
     cmd = [cadical]
     if not disable_proof:  # do proof logging in the LRAT format
         cmd.append("--lrat")
-    if text_lrat:  # LRAT in text format
-        cmd.append("--binary=false")
-    cmd += [tag + ".cnf", tag + ".lrat"]
+        if text_lrat:  # LRAT in text format
+            cmd.append("--binary=false")
+    
+    cmd += [tag + ".cnf"]
+
+    if not disable_proof:  # do proof logging in the LRAT format
+        cmd += [tag + ".lrat"]
 
     t0 = time.perf_counter()
     CURRENT_PROCESS = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -491,7 +499,8 @@ if __name__ == "__main__":
                         help="extra argument for the checker, e.g. "
                             "--checker-arg=--CML_HEAP_SIZE=16384")
     parser.add_argument("--skip-runs", nargs=2, type=int, action="append", default=[], metavar=("KAPPA", "N"),
-                        dest="skip_runs", help="which runs to skip (repeat the option for multiple skips)")
+                        dest="skip_runs", help="which runs to skip (repeat the option for multiple skips) as --skip-runs KAPPA N " \
+                        "e.g. --skip-runs 9 12 skips the run with kappa=9 and n=12")
     parser.add_argument("--count-runs-only", action="store_true", default=False, dest="count_runs_only",
                         help="if this option is given, only count the number of SAT " \
                         "runs needed (kappa x n values)")
@@ -510,6 +519,8 @@ if __name__ == "__main__":
         skip_runs.append(tuple(pair))
     if len(skip_runs)>0:
         print(f"Will skip the following (kappa,ell) runs: {skip_runs}")
+    if args.disable_proof:
+        print(f"Will skip proofs.")
 
     print(f"Using PySAT version={pysat.__version__}")
 
@@ -581,9 +592,8 @@ if __name__ == "__main__":
 
         n_bound_k_three_halves = math.floor((kappa + math.sqrt(2) * math.pow(kappa, 1.5)) / (1 + kappa - ell))
         n_bound_balogh_bollobas = math.ceil(kappa / 2) * math.floor(kappa / 2) - 1 if kappa >= 8 else 2 * (kappa - 1)
-        n_bound_recurrence = 3 * ell - 6  # assuming linear proofs for ell' < ell
 
-        n_upper_bound = min(n_bound_k_three_halves, n_bound_balogh_bollobas, n_bound_recurrence)
+        n_upper_bound = min(n_bound_k_three_halves, n_bound_balogh_bollobas)
 
         for n in range(n_lower_bound, n_upper_bound + 1):
             if ABORT:
