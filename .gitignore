@@ -4,3 +4,4 @@ out
 sat-enumerate
 sat-proofs
 *.o
+testMaximalCliques
