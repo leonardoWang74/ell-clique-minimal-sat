@@ -1,5 +1,5 @@
 # read the README.md for instructions on how to run
-.PHONY: clean, satenumerate, sat, sat9, sat10, sms, nauty-plugin, nauty-plugin8
+.PHONY: clean satenumerate sat sat9 sat10 sms nauty-plugin nauty-plugin8 testMaximalCliques
 
 CXX = g++
 CXXFLAGS = -O3 -std=c++17 -Wall -Wextra
@@ -9,11 +9,11 @@ all: sat-vs-nauty-verification sat
 
 clean:
 	rm -rf ./cadical ./cake_lpr ./sat-proofs ./sat-enumerate ./nauty-plugin/$(NAUTY_VERSION) \
-		./nauty-plugin/$(NAUTY_VERSION).tar.gz ./nauty-plugin/*.o ./*.o plugin_to_graph6 testWithNauty
+		./nauty-plugin/$(NAUTY_VERSION).tar.gz ./nauty-plugin/*.o ./*.o ./nauty-plugin/plugin_to_graph6 testWithNauty
 
-readme:
 help:
 	cat README.md
+readme: help
 
 PY := .venv/bin/python3
 
@@ -44,8 +44,8 @@ cake_lpr:  # download & compile the cake_lpr binary
 LABELG = $(abspath ./nauty-plugin/$(NAUTY_VERSION)/labelg)
 GENG = $(abspath ./nauty-plugin/$(NAUTY_VERSION)/geng)
 nauty-plugin/$(NAUTY_VERSION):
-	cd nauty-plugin; wget --no-check-certificate https://pallini.di.uniroma1.it/$(NAUTY_VERSION).tar.gz
-	cd nauty-plugin; tar xvzf $(NAUTY_VERSION).tar.gz && cd $(NAUTY_VERSION) && ./configure && make
+	cd nauty-plugin && wget --no-check-certificate https://pallini.di.uniroma1.it/$(NAUTY_VERSION).tar.gz
+	cd nauty-plugin && tar xvzf $(NAUTY_VERSION).tar.gz && cd $(NAUTY_VERSION) && ./configure && make
 
 satenumerate: cadical cake_lpr .venv/.installed nauty-plugin/$(NAUTY_VERSION) # enumerate solutions (verify the SAT formulation)
 	-mkdir sat-enumerate
@@ -76,10 +76,10 @@ satenumerate: cadical cake_lpr .venv/.installed nauty-plugin/$(NAUTY_VERSION) # 
 
 # plugin_to_graph6 script: converts the output of the nauty plugin to graph6
 nauty-plugin/plugin_to_graph6.o: Graph.h
-	cd nauty-plugin; $(CXX) $(CXXFLAGS) -c plugin_to_graph6.cpp
+	cd nauty-plugin && $(CXX) $(CXXFLAGS) -c plugin_to_graph6.cpp
 
 nauty-plugin/plugin_to_graph6: nauty-plugin/plugin_to_graph6.o Graph.o
-	cd nauty-plugin; $(CXX) $(CXXFLAGS) plugin_to_graph6.o ../Graph.o -o plugin_to_graph6
+	cd nauty-plugin && $(CXX) $(CXXFLAGS) plugin_to_graph6.o ../Graph.o -o plugin_to_graph6
 
 # nauty-geng plugin: enumerate ell-clique-minimal graphs (pruning while generating graphs)
 NAUTYFLAGS = -DWORDSIZE=32 -DMAXN=WORDSIZE -O4 -mpopcnt -march=native \
@@ -90,34 +90,34 @@ NAUTYFLAGS = -DWORDSIZE=32 -DMAXN=WORDSIZE -O4 -mpopcnt -march=native \
 nauty-plugin: nauty-plugin/$(NAUTY_VERSION) nauty-plugin/plugin_to_graph6
 	-mkdir nauty-plugin/result
 
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=2 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 2 -u > ./result/nauty-ell-2.txt
-	cd nauty-plugin; cat ./result/nauty-ell-2.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-2.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=2 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 2 -u > ./result/nauty-ell-2.txt
+	cd nauty-plugin && cat ./result/nauty-ell-2.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-2.g6
 	
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=3 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 4 -u > ./result/nauty-ell-3.txt
-	cd nauty-plugin; cat ./result/nauty-ell-3.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-3.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=3 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 4 -u > ./result/nauty-ell-3.txt
+	cd nauty-plugin && cat ./result/nauty-ell-3.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-3.g6
 	
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=4 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 6 -u > ./result/nauty-ell-4.txt
-	cd nauty-plugin; cat ./result/nauty-ell-4.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-4.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=4 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 6 -u > ./result/nauty-ell-4.txt
+	cd nauty-plugin && cat ./result/nauty-ell-4.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-4.g6
 	
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=5 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 8 -u > ./result/nauty-ell-5.txt
-	cd nauty-plugin; cat ./result/nauty-ell-5.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-5.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=5 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 8 -u > ./result/nauty-ell-5.txt
+	cd nauty-plugin && cat ./result/nauty-ell-5.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-5.g6
 	
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=6 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 10 -u > ./result/nauty-ell-6.txt
-	cd nauty-plugin; cat ./result/nauty-ell-6.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-6.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=6 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 10 -u > ./result/nauty-ell-6.txt
+	cd nauty-plugin && cat ./result/nauty-ell-6.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-6.g6
 	
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=7 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 12 -u > ./result/nauty-ell-7.txt
-	cd nauty-plugin; cat ./result/nauty-ell-7.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-7.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=7 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 12 -u > ./result/nauty-ell-7.txt
+	cd nauty-plugin && cat ./result/nauty-ell-7.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-7.g6
 
 nauty-plugin8:
-	cd nauty-plugin; gcc -O3 -march=native -mpopcnt -DELL=8 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
-	cd nauty-plugin; ./$(NAUTY_VERSION)/aa_geng_plugin 14 -u > ./result/nauty-ell-8.txt
-	cd nauty-plugin; cat ./result/nauty-ell-8.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-8.g6
+	cd nauty-plugin && gcc -O3 -march=native -mpopcnt -DELL=8 -c plugin_core.c && cd $(NAUTY_VERSION) && gcc $(NAUTYFLAGS)
+	cd nauty-plugin && ./$(NAUTY_VERSION)/aa_geng_plugin 14 -u > ./result/nauty-ell-8.txt
+	cd nauty-plugin && cat ./result/nauty-ell-8.txt | ./plugin_to_graph6 | $(LABELG) -q | sort -u > ./result/nauty-ell-8.g6
 
 # target verifying that nauty-plugin was run
 nauty-plugin/result:
@@ -133,16 +133,16 @@ sat-vs-nauty-verification: satenumerate nauty-plugin
 	# diff ./nauty-plugin/result/nauty-ell-7.g6 ./sat-enumerate/enumerate-ell-7.g6 && echo "    SAT enumeration identical to nauty plugin for ell=7"
 
 # SAT runs to prove UNSAT for n > 2(ell-1)
-sat: cadical cake_lpr
+sat: cadical cake_lpr .venv/.installed
 	$(PY) sat.py -l 6
 	$(PY) sat.py -l 7
 	$(PY) sat.py -l 8
 
-sat9: cadical cake_lpr
+sat9: cadical cake_lpr .venv/.installed
 	# for ell=9 LRAT proofs are >50GB, so we delete LRAT files after verification
 	$(PY) sat.py -l 9 --delete-proof --checker-arg=--CML_HEAP_SIZE=16384
 
-sat10: cadical cake_lpr
+sat10: cadical cake_lpr .venv/.installed
 	# for ell=10 we estimate LRAT proofs to be too large for our disk space
 	$(PY) sat.py -l 10 --disable-proof
 
@@ -154,6 +154,7 @@ testWithNauty-compile: testWithNauty.o Graph.o
 	$(CXX) $(CXXFLAGS) testWithNauty.o Graph.o -o testWithNauty
 
 testWithNauty: testWithNauty-compile nauty-plugin/result
+	-mkdir sat-enumerate
 	$(GENG) -q 2 | ./testWithNauty -l 2 -p 1 > ./sat-enumerate/nauty-basic-enumerate-ell2.txt
 	cat ./sat-enumerate/nauty-basic-enumerate-ell2.txt | $(LABELG) -q | sort -u > ./sat-enumerate/nauty-basic-enumerate-ell2.g6
 
@@ -204,14 +205,14 @@ testMaximalCliques.o: testMaximalCliques.cpp Graph.h
 testMaximalCliques-compile: testMaximalCliques.o Graph.o
 	$(CXX) $(CXXFLAGS) testMaximalCliques.o Graph.o -o testMaximalCliques
 
-testMaximalCliques: testMaximalCliques-compile # verify for ell=4,6,7 that kappa=2(ell-1) cannot be reached by using the enumerated graphs
+testMaximalCliques: sat-enumerate/enumerate-ell-7.g6 testMaximalCliques-compile # verify for ell=3,4,5,6,7 that kappa=2(ell-1) cannot be reached by using the enumerated graphs
 	cat sat-enumerate/enumerate-ell-3.g6 | ./testMaximalCliques -l 3
 	cat sat-enumerate/enumerate-ell-4.g6 | ./testMaximalCliques -l 4
 	cat sat-enumerate/enumerate-ell-5.g6 | ./testMaximalCliques -l 5
 	cat sat-enumerate/enumerate-ell-6.g6 | ./testMaximalCliques -l 6
 	cat sat-enumerate/enumerate-ell-7.g6 | ./testMaximalCliques -l 7
 
-satMaximalCliques:  # verify for ell=8 that kappa=2(ell-1) cannot be reached using SAT directly
+satMaximalCliques: cadical cake_lpr .venv/.installed  # verify for ell=8 that kappa=2(ell-1) cannot be reached using SAT directly
 	$(PY) sat.py -l 8 -k 14 -n 2
 	$(PY) sat.py -l 8 -k 14 -n 3
 	$(PY) sat.py -l 8 -k 14 -n 4

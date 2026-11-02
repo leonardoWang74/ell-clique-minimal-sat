@@ -2,7 +2,7 @@
 is a SAT formulation for the "Exact ell-clique-minimal graph Existence" problem.
 
 ### How to run
-Requirements: installed `make, python3`, `g++`, `gcc, git, diff` commands, bash commansd like `cat`, `cd`, and `mkdir`, 8 GB free disk space, and 2 GB memory (RAM) for $\ell \leq 8$. To run the SAT solver on $\ell=9$ at least 70 GB free disk space (LRAT file size), and at least 16 GB of memory (verifying the LRAT) are required.
+Requirements: installed `make, python3`, `g++`, `gcc, git, diff` commands, bash commansd like `cat`, `cd, wget`, and `mkdir`, 8 GB free disk space, and 2 GB memory (RAM) for $\ell \leq 8$. To run the SAT solver on $\ell=9$ at least 70 GB free disk space (LRAT file size), and at least 16 GB of memory (verifying the LRAT) are required.
 
 Notable Makefile targets:
 - Run `make sat` to run the SAT formulation for $\ell=\{6,7,8\}$ to show UNSAT for the unproven $(kappa,n)$ window and the LRAT proofs will be located in the folder `./sat-proofs` (~40 minutes running time with an 3.1GHz Intel Core i7). After showing UNSAT for every instance, the linear bound $n \leq 2(\ell-1)$ follows for $\ell \leq 8$.
